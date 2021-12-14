@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6e5ba60e-360e-4e38-83c2-5b0ae0debbe2" >
+		<http:listener-connection host="0.0.0.0" port="${http.host}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="da9f18a0-ad6d-47d4-b198-c9dbe4ba6351" file="config.yaml" />
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="910962cb-75c7-4a2b-b7af-3c0b5b49d316" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.username}" password="${db.password}" database="db" />
+	</db:config>
+	<flow name="get_flight_data" doc:id="253544bf-a53d-41ee-b3eb-bd59cf7ee00c" >
+		<http:listener doc:name="Listener" doc:id="28da05ae-185e-4a58-b69e-1a82e4485ec0" config-ref="HTTP_Listener_config" path="/test"/>
+		<db:select doc:name="Select" doc:id="2106ced4-348c-4142-aebc-f1ae1ae99776" config-ref="Database_Config1">
+			<db:sql ><![CDATA[select * from Flights]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="fbf34711-9167-4f29-ae31-fa111805ebe1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d7560394-4e0e-4a25-a2a2-63bbd5650da7" message="End of flow"/>
+	</flow>
+	<flow name="post_flight_data" doc:id="c0bb75ea-265c-4b6f-bfc5-e8cc9d086311" >
+		<http:listener doc:name="Copy_of_Listener" doc:id="bc1a32c7-679e-4163-8e89-1cef4de741f3" config-ref="HTTP_Listener_config" path="/test" />
+		<db:select doc:name="Copy_of_Select" doc:id="5b2161a6-f735-4414-8263-2d5c2cc0a7a2" config-ref="Database_Config1" >
+			<db:sql ><![CDATA[select * from Flights]]></db:sql>
+			<db:input-parameters ><![CDATA[F_ID= :F_ID]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="05c175a2-5c96-45d5-8292-030a1d43a6e7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="2c5e22d5-059b-4f96-b763-9710f410c4e5" message="End of flow" />
+	</flow>
+</mule>

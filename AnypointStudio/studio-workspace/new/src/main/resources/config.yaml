@@ -1,0 +1,9 @@
+http:
+  port: "8081"
+
+
+db:
+  db.host: "sql6.freemysqlhosting.net"
+  db.post: "3306"
+  db.username: "sql6458846"
+  db.password: "r8JuYYFub8" 
